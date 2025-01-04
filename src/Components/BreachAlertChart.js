@@ -1,105 +1,97 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Chart, RadarController, RadialLinearScale, PointElement, Title, Tooltip, Legend } from 'chart.js';
+import React, { useRef, useEffect } from "react";
+import { Chart } from "chart.js/auto";
 
-// Register necessary elements and controllers
-Chart.register(RadarController, RadialLinearScale, PointElement, Title, Tooltip, Legend);
+const BreachAlertChart = ({ feeds }) => {
+	const chartRef = useRef(null);
+	const chartInstance = useRef(null);
 
-const BreachAlertChart = () => {
-  const [breachAlertData, setBreachAlertData] = useState(0);  // Assuming breachAlertData is a number (0 or 1)
-  const chartRef = useRef(null);
-  const chartInstance = useRef(null);
+	useEffect(() => {
+		if (!feeds || !feeds.length || !chartRef.current) return;
 
-  // Function to fetch data from ThingSpeak
-  const fetchData = async () => {
-    const API_KEY = 'YOUR_THINGSPEAK_API_KEY';  // Replace with your ThingSpeak read API key
-    const CHANNEL_ID = 'YOUR_CHANNEL_ID';  // Replace with your ThingSpeak channel ID
+		const timestamps = feeds.map((feed) =>
+			new Date(feed.created_at).toLocaleString()
+		);
+		const breachValues = feeds.map((feed) => parseFloat(feed.field4) || 0);
 
-    try {
-      const response = await fetch(`https://api.thingspeak.com/channels/${CHANNEL_ID}/fields/3.json?api_key=${API_KEY}`);
-      const data = await response.json();
-      if (data && data.feeds && data.feeds.length > 0) {
-        const latestData = data.feeds[data.feeds.length - 1];
-        setBreachAlertData(parseFloat(latestData.field3));  // Assuming breach alert is stored in field 3
-      }
-    } catch (error) {
-      console.error('Error fetching data from ThingSpeak:', error);
-    }
-  };
+		if (chartInstance.current) {
+			chartInstance.current.destroy();
+		}
 
-  // Function to render and update the chart
-  const renderChart = () => {
-    const data = {
-      labels: ['Alert Status'],
-      datasets: [
-        {
-          label: 'Breach Alert',
-          data: [breachAlertData],
-          backgroundColor: 'rgba(255, 159, 64, 0.4)',
-          borderColor: 'rgba(255, 159, 64, 1)',
-          borderWidth: 2,
-        },
-      ],
-    };
+		chartInstance.current = new Chart(chartRef.current, {
+			type: "bar",
+			data: {
+				labels: timestamps,
+				datasets: [
+					{
+						label: "Breach Status",
+						data: breachValues,
+						backgroundColor: breachValues.map((value) =>
+							value
+								? "rgba(255, 99, 132, 0.8)"
+								: "rgba(75, 192, 192, 0.8)"
+						),
+						borderColor: breachValues.map((value) =>
+							value ? "rgb(255, 99, 132)" : "rgb(75, 192, 192)"
+						),
+						borderWidth: 1,
+						tension: 0,
+					},
+				],
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				plugins: {
+					legend: { position: "top" },
+					title: {
+						display: true,
+						text: "Security Breach Status",
+					},
+				},
+				scales: {
+					x: {
+						display: true,
+						title: {
+							display: true,
+							text: "Time",
+						},
+						ticks: {
+							maxRotation: 45,
+							minRotation: 45,
+						},
+					},
+					y: {
+						beginAtZero: true,
+						max: 1,
+						title: {
+							display: true,
+							text: "Status",
+						},
+						ticks: {
+							stepSize: 1,
+							callback: (value) =>
+								value === 0 ? "Secure" : "Breach",
+						},
+					},
+				},
+			},
+		});
 
-    const options = {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: 'top',
-        },
-        title: {
-          display: true,
-          text: 'Breach Alert Status',
-        },
-      },
-      scales: {
-        r: {
-          angleLines: {
-            display: false,
-          },
-          ticks: {
-            min: 0,
-            max: 1,
-            stepSize: 1,
-            display: false,
-          },
-          grid: {
-            color: 'rgba(200, 200, 200, 0.2)',
-          },
-        },
-      },
-    };
+		return () => {
+			if (chartInstance.current) {
+				chartInstance.current.destroy();
+			}
+		};
+	}, [feeds]);
 
-    if (chartInstance.current) {
-      chartInstance.current.destroy(); // Destroy existing chart before creating a new one
-    }
-
-    chartInstance.current = new Chart(chartRef.current, {
-      type: 'radar',
-      data: data,
-      options: options,
-    });
-  };
-
-  // Use useEffect to fetch the data on component mount and update the chart
-  useEffect(() => {
-    fetchData(); // Fetch data when the component mounts
-    const interval = setInterval(fetchData, 15000); // Fetch data every 15 seconds
-
-    return () => {
-      clearInterval(interval); // Clear the interval when the component is unmounted
-    };
-  }, []);
-
-  useEffect(() => {
-    renderChart(); // Re-render the chart whenever the breachAlertData is updated
-  }, [breachAlertData]);
-
-  return (
-    <div className="chart-card">
-      <canvas ref={chartRef} />
-    </div>
-  );
+	return (
+		<div
+			className="bg-white p-4 rounded-lg shadow-lg"
+			style={{ height: "400px" }}
+		>
+			<canvas ref={chartRef} />
+		</div>
+	);
 };
 
 export default BreachAlertChart;

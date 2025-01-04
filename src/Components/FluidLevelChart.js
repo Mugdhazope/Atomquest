@@ -1,62 +1,88 @@
-import React, { useRef, useEffect } from 'react';
-import { Chart, DoughnutController, ArcElement, Title, Tooltip, Legend } from 'chart.js';
+import React, { useRef, useEffect } from "react";
+import { Chart } from "chart.js/auto";
 
-Chart.register(DoughnutController, ArcElement, Title, Tooltip, Legend);
+const FluidLevelChart = ({ feeds }) => {
+	const chartRef = useRef(null);
+	const chartInstance = useRef(null);
 
-const FluidLevelChart = ({ fluidLevelData }) => {
-  const chartRef = useRef(null);
-  const chartInstance = useRef(null);
+	useEffect(() => {
+		if (!feeds || !feeds.length || !chartRef.current) return;
 
-  const data = {
-    labels: ['Fluid Level'],
-    datasets: [
-      {
-        label: 'Fluid Level (%)',
-        data: [fluidLevelData, 100 - fluidLevelData],
-        backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(230, 230, 230, 0.7)'],
-        borderWidth: 0,
-      },
-    ],
-  };
+		const timestamps = feeds.map((feed) =>
+			new Date(feed.created_at).toLocaleString()
+		);
+		const fluidLevels = feeds.map((feed) => parseFloat(feed.field1) || 0);
 
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Fluid Level Monitoring',
-      },
-    },
-  };
+		if (chartInstance.current) {
+			chartInstance.current.destroy();
+		}
 
-  useEffect(() => {
-    const canvas = chartRef.current;
+		chartInstance.current = new Chart(chartRef.current, {
+			type: "line",
+			data: {
+				labels: timestamps,
+				datasets: [
+					{
+						label: "Fluid Level (%)",
+						data: fluidLevels,
+						backgroundColor: "rgba(75, 192, 192, 0.2)",
+						borderColor: "rgba(75, 192, 192, 1)",
+						borderWidth: 2,
+						tension: 0,
+					},
+				],
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				plugins: {
+					legend: { position: "top" },
+					title: {
+						display: true,
+						text: "Fluid Level Monitoring",
+					},
+				},
+				scales: {
+					x: {
+						display: true,
+						title: {
+							display: true,
+							text: "Time",
+						},
+						ticks: {
+							maxRotation: 45,
+							minRotation: 45,
+						},
+					},
+					y: {
+						beginAtZero: false,
+						title: {
+							display: true,
+							text: "Fluid Level (%)",
+						},
+						ticks: {
+							callback: (value) => `${value}%`,
+						},
+					},
+				},
+			},
+		});
 
-    if (chartInstance.current) {
-      chartInstance.current.destroy();
-    }
+		return () => {
+			if (chartInstance.current) {
+				chartInstance.current.destroy();
+			}
+		};
+	}, [feeds]);
 
-    chartInstance.current = new Chart(canvas, {
-      type: 'doughnut',
-      data: data,
-      options: options,
-    });
-
-    return () => {
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
-      }
-    };
-  }, [fluidLevelData]);
-
-  return (
-    <div className="chart-card">
-      <canvas ref={chartRef} />
-    </div>
-  );
+	return (
+		<div
+			className="bg-white p-4 rounded-lg shadow-lg"
+			style={{ height: "400px" }}
+		>
+			<canvas ref={chartRef} />
+		</div>
+	);
 };
 
 export default FluidLevelChart;

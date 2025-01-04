@@ -1,33 +1,38 @@
-/* App.css or similar */
+/* src/App.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body {
-  font-family: Arial, sans-serif;
-  background: linear-gradient(to right, #f2f2f2, #e6e6e6);
+  font-family: 'Arial', sans-serif;
+  background: linear-gradient(to right, #edf2f7, #f7fafc);
   padding: 20px;
   margin: 0;
 }
 
 h1 {
-  color: #333;
+  color: #4A90E2;
   margin-bottom: 30px;
 }
 
 .chart-container {
   display: flex;
-  justify-content: space-around;
-  gap: 40px;
+  justify-content: space-between;
   flex-wrap: wrap;
+  gap: 20px;
 }
 
 .chart-card {
   background: #fff;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-  width: 400px;
-  margin-bottom: 30px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 380px;
+  margin: 10px;
 }
 
 canvas {
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
 }

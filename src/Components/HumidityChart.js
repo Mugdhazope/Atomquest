@@ -1,85 +1,90 @@
-import React, { useRef, useEffect } from 'react';
-import { Chart, CategoryScale, LinearScale, LineController, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import React, { useRef, useEffect } from "react";
+import { Chart } from "chart.js/auto";
 
-Chart.register(CategoryScale, LinearScale, LineController, LineElement, Title, Tooltip, Legend);
+const HumidityChart = ({ feeds }) => {
+	const chartRef = useRef(null);
+	const chartInstance = useRef(null);
 
-const HumidityChart = ({ humidityData }) => {
-  const chartRef = useRef(null);
-  const chartInstance = useRef(null);
+	useEffect(() => {
+		if (!feeds || !feeds.length || !chartRef.current) return;
 
-  const data = {
-    labels: Array(10).fill(''),
-    datasets: [
-      {
-        label: 'Humidity (%)',
-        data: Array(10).fill(humidityData),
-        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 2,
-        fill: true,
-      },
-    ],
-  };
+		const timestamps = feeds.map((feed) =>
+			new Date(feed.created_at).toLocaleString()
+		);
+		const humidityValues = feeds.map(
+			(feed) => parseFloat(feed.field3) || 0
+		);
 
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Humidity Trend',
-      },
-    },
-    scales: {
-      x: {
-        ticks: {
-          color: '#555',
-        },
-        grid: {
-          color: 'rgba(200, 200, 200, 0.2)',
-        },
-      },
-      y: {
-        ticks: {
-          color: '#555',
-          callback: function (value) {
-            return value + ' %';
-          },
-        },
-        grid: {
-          color: 'rgba(200, 200, 200, 0.2)',
-        },
-      },
-    },
-  };
+		if (chartInstance.current) {
+			chartInstance.current.destroy();
+		}
 
-  useEffect(() => {
-    const canvas = chartRef.current;
+		chartInstance.current = new Chart(chartRef.current, {
+			type: "line",
+			data: {
+				labels: timestamps,
+				datasets: [
+					{
+						label: "Humidity (%)",
+						data: humidityValues,
+						backgroundColor: "rgba(54, 162, 235, 0.2)",
+						borderColor: "rgba(54, 162, 235, 1)",
+						borderWidth: 2,
+						tension: 0,
+					},
+				],
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				plugins: {
+					legend: { position: "top" },
+					title: {
+						display: true,
+						text: "Humidity Monitoring",
+					},
+				},
+				scales: {
+					x: {
+						display: true,
+						title: {
+							display: true,
+							text: "Time",
+						},
+						ticks: {
+							maxRotation: 45,
+							minRotation: 45,
+						},
+					},
+					y: {
+						beginAtZero: false,
+						title: {
+							display: true,
+							text: "Humidity (%)",
+						},
+						ticks: {
+							callback: (value) => `${value}%`,
+						},
+					},
+				},
+			},
+		});
 
-    if (chartInstance.current) {
-      chartInstance.current.destroy();
-    }
+		return () => {
+			if (chartInstance.current) {
+				chartInstance.current.destroy();
+			}
+		};
+	}, [feeds]);
 
-    chartInstance.current = new Chart(canvas, {
-      type: 'line',
-      data: data,
-      options: options,
-    });
-
-    return () => {
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
-      }
-    };
-  }, [humidityData]);
-
-  return (
-    <div className="chart-card">
-      <canvas ref={chartRef} />
-    </div>
-  );
+	return (
+		<div
+			className="bg-white p-4 rounded-lg shadow-lg"
+			style={{ height: "400px" }}
+		>
+			<canvas ref={chartRef} />
+		</div>
+	);
 };
 
 export default HumidityChart;
