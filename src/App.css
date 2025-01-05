@@ -3,11 +3,19 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap');
+
 body {
   font-family: 'Arial', sans-serif;
   background: linear-gradient(to right, #edf2f7, #f7fafc);
   padding: 20px;
   margin: 0;
+}
+
+.emoji {
+  font-family: "Noto Color Emoji", serif;
+  font-weight: 400;
+  font-style: normal;
 }
 
 h1 {
