@@ -44,12 +44,12 @@ How can I assist you?`,
 		"System status",
 	];
 
-	const sendMessage = async () => {
-		if (!inputText.trim()) return;
+	const sendMessage = async (text) => {
+		if (!text.trim()) return;
 
 		const userMessage = {
 			role: "user",
-			content: inputText,
+			content: text,
 		};
 
 		setMessages((prev) => [...prev, userMessage]);
@@ -82,19 +82,17 @@ How can I assist you?`,
 
 ${historicalData
 	.map(
-		(d) => `
-Timestamp: ${d.timestamp}
+		(d) => `Timestamp: ${d.timestamp}
 Temperature: ${d.temperature}°C
 Humidity: ${d.humidity}%
 Fluid Level: ${d.fluidLevel}%
-Breach Status: ${d.breachStatus === 1 ? "Alert" : "Normal"}
-`
+Breach Status: ${d.breachStatus === 1 ? "Alert" : "Normal"}`
 	)
-	.join("---")}
+	.join("\n---\n")}
 
 Keep responses brief and focused on sensor data analysis. If the question isn't about sensor data, suggest relevant questions instead.
 
-User question: ${inputText}`,
+User question: ${text}`,
 									},
 								],
 							},
@@ -132,7 +130,10 @@ User question: ${inputText}`,
 		setIsLoading(false);
 	};
 
-	// Speech-to-Text Functionality
+	const handleQuickQuestionClick = (question) => {
+		sendMessage(question);
+	};
+
 	const handleSpeechRecognition = () => {
 		if (!("webkitSpeechRecognition" in window)) {
 			alert("Your browser does not support Speech Recognition.");
@@ -148,7 +149,7 @@ User question: ${inputText}`,
 
 		recognition.onresult = (event) => {
 			const transcript = event.results[0][0].transcript;
-			setInputText(transcript);
+			sendMessage(transcript);
 		};
 
 		recognition.onend = () => setIsListening(false);
@@ -161,7 +162,6 @@ User question: ${inputText}`,
 		recognition.start();
 	};
 
-	// Rest of the component remains unchanged
 	return (
 		<>
 			{/* Floating button */}
@@ -238,7 +238,9 @@ User question: ${inputText}`,
 						{getSuggestedQuestions().map((question, index) => (
 							<button
 								key={index}
-								onClick={() => setInputText(question)}
+								onClick={() =>
+									handleQuickQuestionClick(question)
+								}
 								className="text-sm bg-gray-100 hover:bg-gray-200 rounded-full px-3 py-1 whitespace-nowrap text-gray-700"
 							>
 								{question}
@@ -255,7 +257,7 @@ User question: ${inputText}`,
 							value={inputText}
 							onChange={(e) => setInputText(e.target.value)}
 							onKeyPress={(e) =>
-								e.key === "Enter" && sendMessage()
+								e.key === "Enter" && sendMessage(inputText)
 							}
 							placeholder="Ask about sensor data..."
 							className="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -271,7 +273,7 @@ User question: ${inputText}`,
 							<Mic className="w-5 h-5" />
 						</button>
 						<button
-							onClick={sendMessage}
+							onClick={() => sendMessage(inputText)}
 							disabled={isLoading}
 							className="bg-indigo-600 text-white rounded-lg px-4 py-2 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
 						>
