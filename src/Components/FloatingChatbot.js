@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { MessageCircle, Send, X, HelpCircle, Mic } from "lucide-react";
 
-const FloatingChatbot = ({ apiKey, feeds }) => {
+const FloatingChatbot = ({ apiKey, feeds, selectedFluid }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [messages, setMessages] = useState([]);
 	const [inputText, setInputText] = useState("");
@@ -78,7 +78,7 @@ How can I assist you?`,
 							{
 								parts: [
 									{
-										text: `You are a sensor data analysis assistant. Here is the historical sensor data from newest to oldest:
+										text: `You are a sensor data analysis assistant. Here is the historical sensor data for ${selectedFluid} from newest to oldest:
 
 ${historicalData
 	.map(

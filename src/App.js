@@ -7,6 +7,24 @@ import NotificationModal from "./Components/NotificationModal";
 import FloatingChatbot from "./Components/FloatingChatbot";
 import "./App.css";
 
+const FLUID_THRESHOLDS = {
+	water: { tempMin: 0, tempMax: 100, humidityMax: 70, fluidLevelMax: 70 },
+	"cooking oil": {
+		tempMin: 15,
+		tempMax: 220,
+		humidityMax: 70,
+		fluidLevelMax: 70,
+	},
+	ethanol: {
+		tempMin: -114.1,
+		tempMax: 78.37,
+		humidityMax: 70,
+		fluidLevelMax: 70,
+	},
+	milk: { tempMin: 0, tempMax: 70, humidityMax: 70, fluidLevelMax: 70 },
+	diesel: { tempMin: -15, tempMax: 80, humidityMax: 70, fluidLevelMax: 70 },
+};
+
 const App = () => {
 	const [sensorData, setSensorData] = useState({
 		feeds: [],
@@ -18,6 +36,7 @@ const App = () => {
 	const [isLoading, setIsLoading] = useState(true);
 	const [activeTab, setActiveTab] = useState("all");
 	const [refreshInterval, setRefreshInterval] = useState(10000);
+	const [selectedFluid, setSelectedFluid] = useState("water"); // Default fluid
 
 	const playAudioAlert = useCallback(() => {
 		if (!hasUserInteracted) return;
@@ -37,10 +56,18 @@ const App = () => {
 			const breach = parseFloat(latestFeed.field4);
 			const fluidLevel = parseFloat(latestFeed.field1);
 
-			if (temperature > 60) alerts.push("🌡️ Temperature above threshold");
-			if (humidity > 70) alerts.push("💧 Humidity above threshold");
+			const thresholds = FLUID_THRESHOLDS[selectedFluid];
+
+			if (
+				temperature < thresholds.tempMin ||
+				temperature > thresholds.tempMax
+			)
+				alerts.push("🌡️ Temperature outside threshold");
+			if (humidity > thresholds.humidityMax)
+				alerts.push("💧 Humidity above threshold");
 			if (breach === 1) alerts.push("⚠️ Security breach detected");
-			if (fluidLevel > 70) alerts.push("🌊 Fluid level above threshold");
+			if (fluidLevel > thresholds.fluidLevelMax)
+				alerts.push("🌊 Fluid level above threshold");
 
 			if (alerts.length > 0) {
 				playAudioAlert();
@@ -48,7 +75,7 @@ const App = () => {
 				setShowAlert(true);
 			}
 		},
-		[playAudioAlert]
+		[playAudioAlert, selectedFluid]
 	);
 
 	const fetchData = useCallback(async () => {
@@ -128,6 +155,18 @@ const App = () => {
 					<div className="mt-4 md:mt-0 flex items-center gap-4">
 						{getStatusIndicator()}
 						<select
+							value={selectedFluid}
+							onChange={(e) => setSelectedFluid(e.target.value)}
+							className="bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+						>
+							{Object.keys(FLUID_THRESHOLDS).map((fluid) => (
+								<option key={fluid} value={fluid}>
+									{fluid.charAt(0).toUpperCase() +
+										fluid.slice(1)}
+								</option>
+							))}
+						</select>
+						<select
 							value={refreshInterval}
 							onChange={(e) =>
 								setRefreshInterval(Number(e.target.value))
@@ -140,7 +179,6 @@ const App = () => {
 						</select>
 					</div>
 				</div>
-
 				<div className="bg-white rounded-xl shadow-sm p-6 mb-6">
 					<div className="flex gap-4 mb-6 overflow-x-auto">
 						{["all", "temperature", "humidity", "security"].map(
@@ -220,6 +258,7 @@ const App = () => {
 			<FloatingChatbot
 				apiKey={process.env.REACT_APP_GEMINI_API_KEY}
 				feeds={sensorData.feeds}
+				selectedFluid={selectedFluid}
 			/>
 
 			{showAlert && (
