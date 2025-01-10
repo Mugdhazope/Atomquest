@@ -15,11 +15,19 @@ const BreachAlertChart = ({ feeds }) => {
   const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
-    if (!feeds || !feeds.length || !chartRef.current) return;
+    if (!feeds || !feeds.length || !chartRef.current) {
+      setActiveBreaches(0); // Reset breaches
+      setLastUpdateTime("N/A");
+      return;
+    }
+    
+    // if (!feeds || !feeds.length || !chartRef.current) return;
 
     const timestamps = feeds.map((feed) =>
       new Date(feed.created_at).toLocaleString()
     );
+
+    
     const breachValues = feeds.map((feed) => parseFloat(feed.field4) || 0);
 
     // Update stats

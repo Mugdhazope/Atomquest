@@ -65,7 +65,7 @@ const App = () => {
 				alerts.push("🌡️ Temperature outside threshold");
 			if (humidity > thresholds.humidityMax)
 				alerts.push("💧 Humidity above threshold");
-			if (breach === 1) alerts.push("⚠️ Security breach detected");
+			// if (breach === 1) alerts.push("⚠️ Security breach detected");
 			if (fluidLevel > thresholds.fluidLevelMax)
 				alerts.push("🌊 Fluid level above threshold");
 
